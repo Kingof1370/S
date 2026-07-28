@@ -67,7 +67,7 @@ export default function RegisterPage() {
         <div className="bg-primary/20 border border-secondary/10 rounded-card p-8 shadow-card">
           <div className="border-b border-secondary/10 pb-4 mb-6">
             <h1 className="text-2xl md:text-3xl font-black text-textLight">Create Account</h1>
-            <p className="text-sm text-textMuted mt-1">Get up to 1000% welcome bonus credited instantly.</p>
+            <p className="text-sm text-textMuted mt-1">Get up to 200% welcome bonus credited instantly.</p>
           </div>
 
           {error && (

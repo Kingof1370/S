@@ -145,7 +145,7 @@ async function main() {
       status: 'CONFIRMED',
       confirmations: 19,
       bonusApplied: true,
-      description: '1000% Welcome Bonus Credit',
+      description: '200% Welcome Bonus Credit',
     },
   });
 

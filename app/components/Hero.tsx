@@ -132,7 +132,7 @@ export default function Hero() {
             <h1 className="text-4xl md:text-6xl font-black text-textLight leading-[1.15]">
               Trade Crypto with{' '}
               <span className="bg-gradient-primary bg-clip-text text-transparent hover:brightness-110 transition-all">
-                1000% Welcome Bonus
+                200% Welcome Bonus
               </span>
             </h1>
             <p className="text-lg md:text-xl font-semibold text-textMuted max-w-xl">
@@ -222,7 +222,7 @@ export default function Hero() {
               {/* Bonus meter */}
               <div className="bg-bgDark/80 p-5 rounded-input border border-secondary/10">
                 <div className="flex justify-between items-center mb-2">
-                  <p className="text-xs text-textMuted font-bold uppercase tracking-wider">🎁 1000% Bonus Claimed Today</p>
+                  <p className="text-xs text-textMuted font-bold uppercase tracking-wider">🎁 200% Bonus Claimed Today</p>
                   <span className="text-xs text-accent font-mono font-semibold">342 Users</span>
                 </div>
                 {/* Progress bar */}

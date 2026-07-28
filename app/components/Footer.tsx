@@ -47,7 +47,7 @@ export default function Footer() {
         <div className="space-y-4">
           <h4 className="font-bold text-textLight uppercase tracking-wider text-xs">Product</h4>
           <ul className="space-y-2">
-            <li><Link href="/#calculator" className="hover:text-secondary transition-colors">1000% Welcome Bonus</Link></li>
+            <li><Link href="/#calculator" className="hover:text-secondary transition-colors">200% Welcome Bonus</Link></li>
             <li><Link href="/prop" className="hover:text-secondary transition-colors">Prop Trading Challenge</Link></li>
             <li><Link href="/#calculator" className="hover:text-secondary transition-colors">Pricing & Rates</Link></li>
             <li><span className="opacity-50">Mobile App (Q3 2026)</span></li>

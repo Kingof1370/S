@@ -24,7 +24,7 @@ export default function FinalCTA() {
         </h2>
 
         <p className="text-textMuted text-lg md:text-xl font-medium max-w-xl mx-auto leading-relaxed">
-          Join 12,000+ traders and claim your 1000% welcome bonus today. Get matched with up to $50,000 in free bonus capital instantly!
+          Join 12,000+ traders and claim your 200% welcome bonus today. Get matched with up to $50,000 in free bonus capital instantly!
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

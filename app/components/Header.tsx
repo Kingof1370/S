@@ -44,7 +44,7 @@ export default function Header() {
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
           </Link>
           <Link href="/#calculator" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
-            1000% Bonus
+            200% Bonus
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
           </Link>
           <Link href="/#faq" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
@@ -62,7 +62,7 @@ export default function Header() {
             href="/auth/register"
             className="bg-gradient-primary hover:shadow-glow text-primary font-bold text-sm px-6 py-3 rounded-button transition-all duration-300 transform hover:-translate-y-0.5"
           >
-            Sign Up - Get 1000% Bonus
+            Sign Up - Get 200% Bonus
           </Link>
         </div>
 
@@ -97,7 +97,7 @@ export default function Header() {
             onClick={() => setIsOpen(false)}
             className="text-lg font-bold text-textLight/90 hover:text-secondary"
           >
-            1000% Bonus
+            200% Bonus
           </Link>
           <Link
             href="/#faq"
@@ -121,7 +121,7 @@ export default function Header() {
             onClick={() => setIsOpen(false)}
             className="bg-gradient-primary text-primary font-bold text-center py-4 rounded-button hover:shadow-glow transition-all"
           >
-            Sign Up - Get 1000% Bonus
+            Sign Up - Get 200% Bonus
           </Link>
         </div>
       )}

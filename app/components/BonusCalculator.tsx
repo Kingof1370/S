@@ -31,7 +31,7 @@ export default function BonusCalculator() {
     return () => clearInterval(timer);
   }, []);
 
-  const bonusAmount = deposit * 10;
+  const bonusAmount = deposit * 2; // 200% welcome bonus multiplier
   const totalAmount = deposit + bonusAmount;
 
   return (
@@ -49,11 +49,11 @@ export default function BonusCalculator() {
           </div>
 
           <h2 className="text-3xl md:text-5xl font-black text-textLight leading-tight">
-            🎁 Limited Time:<br />1000% Welcome Bonus
+            🎁 Limited Time:<br />200% Welcome Bonus
           </h2>
 
           <p className="text-textMuted text-lg leading-relaxed max-w-lg">
-            Deposit $50 in TRON, get $500 FREE. First deposit only. Trade with maximum leverage and instant fee cashback. Leverage your capital up to 10x instantly.
+            Deposit $50, get $100 FREE. First deposit only. Trade with maximum leverage and instant fee cashback. Leverage your capital up to 3x instantly.
           </p>
 
           {/* Countdown & Live Claim Counter */}
@@ -78,7 +78,7 @@ export default function BonusCalculator() {
                 <Calculator className="w-5 h-5 text-secondary" />
                 <h4 className="font-bold text-textLight">Interactive Bonus Estimator</h4>
               </div>
-              <span className="text-xs font-bold text-accent font-mono bg-accent/10 px-2 py-0.5 rounded-pill">1000% Match</span>
+              <span className="text-xs font-bold text-accent font-mono bg-accent/10 px-2 py-0.5 rounded-pill">200% Match</span>
             </div>
 
             {/* Slider control */}
@@ -120,7 +120,7 @@ export default function BonusCalculator() {
               <div className="bg-primary/20 p-4 rounded-input border border-secondary/10 flex items-center space-x-4">
                 <div className="text-4xl">💰</div>
                 <p className="text-xs text-textMuted leading-relaxed">
-                  Your capital multiplier will increase by <span className="text-accent font-bold">1000%</span> instantly on blockchain network confirmation!
+                  Your capital multiplier will increase by <span className="text-accent font-bold">200%</span> instantly on blockchain network confirmation!
                 </p>
               </div>
 

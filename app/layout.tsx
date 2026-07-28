@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata = {
   title: 'NEXUSPAY - Bridge to Digital Wealth',
-  description: 'Trade cryptocurrency with 1000% welcome match bonus and prop trading capital up to $500,000 on UK regulated FCA ecosystem.',
+  description: 'Trade cryptocurrency with 200% welcome match bonus and prop trading capital up to $500,000 on UK regulated FCA ecosystem.',
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <title>NEXUSPAY - Bridge to Digital Wealth</title>
-        <meta name="description" content="Trade cryptocurrency with 1000% welcome match bonus and prop trading capital up to $500,000 on UK regulated FCA ecosystem." />
+        <meta name="description" content="Trade cryptocurrency with 200% welcome match bonus and prop trading capital up to $500,000 on UK regulated FCA ecosystem." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

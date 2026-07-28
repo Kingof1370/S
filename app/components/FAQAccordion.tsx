@@ -45,7 +45,7 @@ export default function FAQAccordion() {
             Frequently Asked Questions
           </h2>
           <p className="text-textMuted font-semibold">
-            All you need to know about deposits, our 1000% welcome bonus, prop evaluation rules, and funds security.
+            All you need to know about deposits, our 200% welcome bonus, prop evaluation rules, and funds security.
           </p>
         </div>
 

@@ -81,7 +81,7 @@ export const TESTIMONIALS_DATA = [
     rating: 5.0,
     name: 'Sarah Johnson',
     location: 'London',
-    quote: 'Fastest exchange I\'ve ever used. The 1000% bonus was incredible! Withdrawal took 3 minutes.',
+    quote: 'Fastest exchange I\'ve ever used. The 200% bonus was incredible! Withdrawal took 3 minutes.',
   },
   {
     rating: 4.9,
@@ -105,7 +105,7 @@ export const TESTIMONIALS_DATA = [
     rating: 5.0,
     name: 'Priya Sharma',
     location: 'Leeds',
-    quote: 'The 1000% bonus doubled my portfolio. Highly recommended!',
+    quote: 'The 200% bonus doubled my portfolio. Highly recommended!',
   },
   {
     rating: 4.9,
@@ -117,8 +117,8 @@ export const TESTIMONIALS_DATA = [
 
 export const FAQ_DATA = [
   {
-    q: 'How do I claim the 1000% bonus?',
-    a: 'Simply register an account, make your first deposit of at least $10 (equivalent TRX), and the 1000% match bonus will be instantly credited to your bonus balance.',
+    q: 'How do I claim the 200% bonus?',
+    a: 'Simply register an account, make your first deposit of at least $10 (equivalent TRX), and the 200% match bonus will be instantly credited to your bonus balance.',
   },
   {
     q: 'Is NexusPay regulated in the UK?',

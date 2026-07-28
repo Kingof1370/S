@@ -29,7 +29,7 @@ export default function Testimonials() {
             Loved by Traders Everywhere
           </h2>
           <p className="text-textMuted font-semibold leading-relaxed">
-            See how our premium execution, generous 1000% welcome matches, and reliable customer service build long-term trust with our community.
+            See how our premium execution, generous 200% welcome matches, and reliable customer service build long-term trust with our community.
           </p>
 
           <div className="flex items-center space-x-4">

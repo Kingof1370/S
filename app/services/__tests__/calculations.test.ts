@@ -5,11 +5,11 @@ import { convertUSDToTRX, convertTRXToUSD } from '../priceService';
 import { validateChallengeProgress } from '../propService';
 
 describe('NEXUSPAY Calculation & Verification Covenants', () => {
-  test('Bonus Calculator correctly applies 1000% welcome match', () => {
+  test('Bonus Calculator correctly applies 200% welcome match', () => {
     const result = calculateWelcomeBonus(50);
     expect(result.deposit).toBe(50);
-    expect(result.bonus).toBe(500);
-    expect(result.total).toBe(550);
+    expect(result.bonus).toBe(100);
+    expect(result.total).toBe(150);
   });
 
   test('Bonus Eligibility allows first-time deposits over $10', () => {

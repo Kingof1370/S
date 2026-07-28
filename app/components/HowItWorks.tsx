@@ -52,9 +52,9 @@ export default function HowItWorks() {
               <Gift className="w-6 h-6 text-secondary" />
               <span className="absolute -top-1 -right-1 bg-accent text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-black">3</span>
             </div>
-            <h3 className="text-lg font-bold text-textLight">Get 1000% Bonus</h3>
+            <h3 className="text-lg font-bold text-textLight">Get 200% Bonus</h3>
             <p className="text-sm text-textMuted max-w-xs">
-              Your 1000% match bonus is automatically credited to your balance instantly upon your first successful deposit!
+              Your 200% match bonus is automatically credited to your balance instantly upon your first successful deposit!
             </p>
           </div>
         </div>

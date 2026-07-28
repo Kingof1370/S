@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #0A2540;
+  --secondary: #0066FF;
+  --accent: #00D4AA;
+  --gradient-primary: linear-gradient(135deg, #0066FF, #00D4AA);
+  --gradient-dark: linear-gradient(135deg, #0A2540, #1A3A5C);
+  --gradient-cta: linear-gradient(135deg, #00D4AA, #0066FF);
+  --warning: #FF6B35;
+  --danger: #FF3B30;
+  --bg-light: #F8FAFC;
+  --bg-dark: #0A1A2B;
+  --text-dark: #0A1A2B;
+  --text-light: #FFFFFF;
+  --text-muted: #94A3B8;
+  --shadow-card: 0 20px 60px rgba(0,0,0,0.12);
+  --shadow-hover: 0 30px 80px rgba(0,102,255,0.20);
+  --shadow-glow: 0 0 40px rgba(0,212,170,0.30);
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

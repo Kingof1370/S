@@ -1,0 +1,183 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String        @id @default(cuid())
+  email            String        @unique
+  phone            String?       @unique
+  firstName        String
+  lastName         String
+  password         String
+  tronAddress      String        @unique
+  depositBalance   Float         @default(0)
+  bonusBalance     Float         @default(0)
+  totalDeposited   Float         @default(0)
+  totalWithdrawn   Float         @default(0)
+  totalProfit      Float         @default(0)
+  isVerified       Boolean       @default(false)
+  isFirstDeposit   Boolean       @default(true)
+  bonusClaimed     Boolean       @default(false)
+  bonusPercentage  Int           @default(1000)
+  twoFactorSecret  String?
+  isActive         Boolean       @default(true)
+  role             String        @default("USER") // 'USER', 'ADMIN', 'SUPPORT'
+  kycStatus        String        @default("PENDING") // 'PENDING', 'VERIFIED', 'REJECTED'
+  referralCode     String?       @unique
+  referredBy       String?
+  lastLoginAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  transactions     Transaction[]
+  propChallenges   PropChallenge[]
+  loginAttempts    LoginAttempt[]
+  notifications    Notification[]
+  adminLogs        AdminLog[]
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  ipAddress  String
+  userAgent  String?
+  successful Boolean
+  createdAt  DateTime @default(now())
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  txId            String?           @unique
+  type            String            // 'DEPOSIT', 'WITHDRAWAL', 'BONUS', 'TRADE', 'FEE'
+  amountUSD       Float
+  amountTRX       Float?
+  status          String            @default("PENDING") // 'PENDING', 'CONFIRMED', 'FAILED', 'CANCELLED'
+  confirmations   Int               @default(0)
+  isFirstDeposit  Boolean           @default(false)
+  bonusApplied    Boolean           @default(false)
+  description     String?
+  adminNotes      String?
+  tronAddress     String?
+  createdAt       DateTime          @default(now())
+  confirmedAt     DateTime?
+  failedAt        DateTime?
+  cancelledAt     DateTime?
+}
+
+model PropChallenge {
+  id               String        @id @default(cuid())
+  userId           String
+  user             User          @relation(fields: [userId], references: [id])
+  tier             String        // 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND', 'ROYAL'
+  accountSize      Float
+  feePaid          Float
+  status           String        @default("PHASE_1") // 'PHASE_1', 'PHASE_2', 'FUNDED', 'FAILED', 'CLOSED'
+  profitTarget     Float
+  dailyLossLimit   Float
+  maxDrawdown      Float
+  minTradingDays   Int
+  currentProfit    Float         @default(0)
+  peakBalance      Float
+  tradingDays      Int           @default(0)
+  consistencyScore Float
+  isConsistent     Boolean       @default(true)
+  profitSplit      Float         @default(80)
+  totalPayouts     Float         @default(0)
+  payoutCount      Int           @default(0)
+  scalingEnabled   Boolean       @default(true)
+  scalingLevel     Int           @default(0)
+  startedAt        DateTime      @default(now())
+  fundedAt         DateTime?
+  closedAt         DateTime?
+
+  transactions     PropTransaction[]
+  payouts          PropPayout[]
+}
+
+model PropTransaction {
+  id            String   @id @default(cuid())
+  challengeId   String
+  challenge     PropChallenge @relation(fields: [challengeId], references: [id])
+  type          String   // PROFIT, LOSS, FEE, PAYOUT
+  amount        Float
+  currency      String   @default("USD")
+  status        String
+  description   String?
+  createdAt     DateTime @default(now())
+}
+
+model PropPayout {
+  id            String   @id @default(cuid())
+  challengeId   String
+  challenge     PropChallenge @relation(fields: [challengeId], references: [id])
+  amount        Float
+  status        String   // PENDING, APPROVED, REJECTED, PAID
+  tronAddress   String
+  txId          String?
+  adminNotes    String?
+  requestedAt   DateTime @default(now())
+  processedAt   DateTime?
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  title      String
+  message    String
+  type       String   // EMAIL, IN_APP, BOTH
+  isRead     Boolean  @default(false)
+  sentAt     DateTime @default(now())
+  readAt     DateTime?
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  user       User     @relation(fields: [adminId], references: [id])
+  action     String
+  details    String   // JSON stringified object
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+
+model SystemSetting {
+  id                    String   @id @default(cuid())
+  bonusMultiplier       Int      @default(10)
+  minDepositForBonus    Float    @default(10)
+  maxBonus              Float    @default(50000)
+  minWithdrawal         Float    @default(10)
+  maxWithdrawalDaily    Float    @default(5000)
+  maxWithdrawalMonthly  Float    @default(25000)
+  networkFeeTRX         Float    @default(1)
+  defaultProfitSplit    Float    @default(80)
+  payoutFrequencyDays   Int      @default(14)
+  scalingEnabled        Boolean  @default(true)
+  scalingPercentage     Float    @default(20)
+  scalingMaxCapital     Float    @default(1000000)
+  maxLoginAttempts      Int      @default(5)
+  sessionTimeoutMinutes Int      @default(60)
+  twoFactorRequired     Boolean  @default(true)
+  maintenanceMode       Boolean  @default(false)
+  updatedAt             DateTime @updatedAt
+}
+
+model PriceCache {
+  id         String   @id @default(cuid())
+  symbol     String   @unique
+  priceUSD   Float
+  change24h  Float
+  volume24h  Float
+  updatedAt  DateTime @updatedAt
+}

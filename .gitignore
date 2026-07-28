@@ -34,3 +34,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+dev_output.log
+npm_output.log
+start_output.log
+prisma/dev.db
+nexuspay-project.zip
+public/nexuspay-project.zip

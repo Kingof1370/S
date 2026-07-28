@@ -2,13 +2,21 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { ArrowUpRight, ArrowDownLeft, Shield, Award, LineChart } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Shield, Award, LineChart, PlayCircle, RefreshCw } from 'lucide-react';
 
 export default function UserDashboardOverview() {
+  const [demoBalance, setDemoBalance] = useState(10000);
+  const [isDemo, setIsDemo] = useState(true);
+  const [fundingRequest, setFundingRequest] = useState(10000);
+
+  const handleResetDemo = () => {
+    setDemoBalance(fundingRequest);
+  };
+
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
       <Header />
@@ -23,7 +31,18 @@ export default function UserDashboardOverview() {
             </p>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsDemo(!isDemo)}
+              className={`px-4 py-2.5 rounded-button text-xs font-black uppercase tracking-wider transition-all border ${
+                isDemo
+                  ? 'bg-accent/10 border-accent text-accent hover:bg-accent/20'
+                  : 'bg-secondary/15 border-secondary text-secondary hover:bg-secondary/25'
+              }`}
+            >
+              {isDemo ? '🟢 Mode: DEMO / SANDBOX' : '🔴 Mode: LIVE ACCOUNT'}
+            </button>
+
             <Link
               href="/dashboard/deposit"
               className="bg-accent hover:bg-accent/90 hover:shadow-glow text-primary font-bold text-sm px-5 py-3 rounded-button transition-all flex items-center space-x-1"
@@ -41,11 +60,54 @@ export default function UserDashboardOverview() {
           </div>
         </div>
 
+        {/* Demo Account Setup Controller */}
+        {isDemo && (
+          <div className="bg-accent/10 border border-accent/20 rounded-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="font-bold text-textLight flex items-center space-x-2">
+                <PlayCircle className="w-5 h-5 text-accent" />
+                <span>Professional Demo Trading Simulator Enabled</span>
+              </h3>
+              <p className="text-xs text-textMuted leading-relaxed max-w-xl">
+                Configure your simulator balance instantly to practice trading setups, test leverages, or try prop challenge mechanics without financial risks.
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-1">
+                <span className="text-xs text-textMuted font-mono font-bold">$</span>
+                <select
+                  value={fundingRequest}
+                  onChange={(e) => setFundingRequest(Number(e.target.value))}
+                  className="bg-primary border border-secondary/20 rounded-input p-2 font-mono text-xs text-textLight focus:outline-none focus:border-accent"
+                >
+                  <option value={5000}>5,000</option>
+                  <option value={10000}>10,000</option>
+                  <option value={25000}>25,000</option>
+                  <option value={50000}>50,000</option>
+                  <option value={100000}>100,000</option>
+                  <option value={500000}>500,000</option>
+                </select>
+              </div>
+              <button
+                onClick={handleResetDemo}
+                className="bg-accent text-primary font-black text-xs px-4 py-2.5 rounded-button hover:shadow-glow transition-all flex items-center space-x-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Set Demo Balance</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 4 Balance Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
-            <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Total Portfolio Balance</span>
-            <p className="text-3xl font-mono font-black text-textLight">$12,847.50</p>
+            <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">
+              {isDemo ? 'Demo Portfolio Balance' : 'Total Portfolio Balance'}
+            </span>
+            <p className="text-3xl font-mono font-black text-textLight">
+              ${isDemo ? demoBalance.toLocaleString() : '12,847.50'}
+            </p>
           </div>
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
             <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Deposit Balance</span>

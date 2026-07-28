@@ -2,56 +2,43 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { useTronDeposit } from '../../hooks/useTronDeposit';
 import { useLivePrices } from '../../hooks/useLivePrices';
-import { Clipboard, Smartphone, CheckCircle, Info, Coins } from 'lucide-react';
+import { createCryptomusInvoice } from '../../services/cryptomusService';
+import { CheckCircle, Coins, ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export default function UserDepositPage() {
   const [depositAmount, setDepositAmount] = useState(50);
   const [selectedCoin, setSelectedCoin] = useState('TRX/USD');
-  const [copied, setCopied] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [invoice, setInvoice] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch all 50 live cryptocurrencies dynamically to allow depositing with ANY of them!
   const livePrices = useLivePrices();
 
   // Find current exchange rate of selected coin relative to USD
   const currentCoinPrice = livePrices.find((p) => p.symbol === selectedCoin)?.priceUSD || 1;
+  const currentTicker = selectedCoin.split('/')[0];
 
-  const targetAddresses: Record<string, string> = {
-    'TRX/USD': 'TL87pX9Z7LhYj6g67SdaD78saH7Gdf2sdC',
-    'BTC/USD': '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
-    'ETH/USD': '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
-    'USDT/USD': 'TXbK7NfAs7D88Yg8G67SdaD78saH7Gdf2sdC',
-  };
-
-  // Safe fallback address generator if the coin doesn't have a static one configured
-  const getDepositAddress = (symbol: string) => {
-    if (targetAddresses[symbol]) return targetAddresses[symbol];
-    // Create deterministic simulated address based on coin ticker for any of the 50 coins globally
-    const ticker = symbol.split('/')[0];
-    return `0x${ticker}87F9d...74${ticker}789saH7Gdf2sd`;
-  };
-
-  const targetAddress = getDepositAddress(selectedCoin);
-
-  const { status, confirmations, txHash, startSimulator } = useTronDeposit(() => {
-    setSuccess(true);
-  });
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(targetAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    startSimulator(depositAmount);
+    setLoading(true);
+
+    try {
+      const generatedInvoice = await createCryptomusInvoice({
+        amount: depositAmount.toString(),
+        currency: currentTicker,
+        order_id: `NP-ORDER-${Date.now()}`,
+      });
+      setInvoice(generatedInvoice);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,10 +47,10 @@ export default function UserDepositPage() {
 
       <section className="py-20 px-6 max-w-[800px] mx-auto">
         <div className="bg-primary/20 border border-secondary/10 rounded-card p-8 shadow-card">
-          {!success ? (
+          {!invoice ? (
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="border-b border-secondary/10 pb-4">
-                <h1 className="text-2xl md:text-3xl font-black text-textLight">Multi-Asset Instant Deposit</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-textLight">Live Global Crypto Deposit</h1>
                 <p className="text-sm text-textMuted mt-1">
                   Fund your account instantly using **ANY** of the top 50 global cryptocurrencies with zero deposit fees. Applies <span className="text-accent font-bold">200% welcome match bonus</span> on first deposit.
                 </p>
@@ -87,7 +74,7 @@ export default function UserDepositPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-textMuted uppercase mb-1.5">Deposit Amount (USD Equivalent)</label>
+                  <label className="block text-xs font-bold text-textMuted uppercase mb-1.5">Deposit Amount (USD)</label>
                   <input
                     type="number"
                     min="10"
@@ -110,87 +97,19 @@ export default function UserDepositPage() {
                 <div className="text-right">
                   <span className="text-sm font-mono font-black text-accent">
                     {(depositAmount / currentCoinPrice).toLocaleString(undefined, { maximumFractionDigits: 6 })}{' '}
-                    {selectedCoin.split('/')[0]}
+                    {currentTicker}
                   </span>
                   <span className="text-xs text-textMuted block">≈ ${depositAmount.toLocaleString()} USD</span>
                 </div>
               </div>
 
-              {status !== 'Waiting' ? (
-                <div className="bg-bgDark p-6 rounded-card border border-secondary/15 text-center space-y-4">
-                  <p className="text-sm font-bold text-textLight">
-                    Deposit Status: <span className="text-accent">{status}</span>
-                  </p>
-
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <span className="text-xs text-textMuted font-mono">Blockchain validations:</span>
-                    <p className="text-2xl font-mono font-black text-textLight">
-                      {confirmations} / 19
-                    </p>
-                    <div className="w-48 bg-primary/40 h-2 rounded-pill overflow-hidden">
-                      <div
-                        className="bg-accent h-full transition-all duration-300"
-                        style={{ width: `${(confirmations / 19) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {txHash && (
-                    <div className="text-xs text-textMuted border-t border-secondary/10 pt-4 mt-2 text-left">
-                      <p className="font-semibold">Transaction ID:</p>
-                      <p className="font-mono bg-primary p-2 rounded mt-1 break-all select-all">{txHash}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Custom Transfer Block */}
-                  <div className="bg-bgDark/80 p-6 rounded-card border border-secondary/15 space-y-4">
-                    <p className="text-xs font-bold text-textMuted uppercase tracking-wider">
-                      Generated {selectedCoin.split('/')[0]} Deposit Address
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center sm:space-x-6 gap-4">
-                      {/* Premium simulated QR Code representation */}
-                      <div className="w-32 h-32 bg-white rounded-input p-2 flex items-center justify-center shrink-0">
-                        <div className="w-full h-full bg-slate-900 rounded flex flex-col items-center justify-center text-accent text-center p-1">
-                          <Smartphone className="w-6 h-6 mb-1" />
-                          <span className="text-[9px] font-mono font-bold leading-tight">SCAN TO TRANSFER</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 flex-1 w-full">
-                        <label className="text-xs text-textMuted font-bold">Copy Your Unique Address</label>
-                        <div className="flex">
-                          <input
-                            type="text"
-                            readOnly
-                            value={targetAddress}
-                            className="w-full bg-primary border border-secondary/20 rounded-l-input p-3 font-mono text-xs text-textLight focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleCopy}
-                            className="bg-secondary hover:bg-secondary/95 text-textLight font-bold px-4 rounded-r-input text-xs"
-                          >
-                            {copied ? 'Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                        <p className="text-[10px] text-textMuted leading-relaxed">
-                          ⚠️ Warning: Send ONLY {selectedCoin.split('/')[0]} to this address. Any other token might be permanently lost.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-primary hover:shadow-glow text-primary font-black text-lg py-4 rounded-button transition-all"
-                  >
-                    Initiate Deposit Verification
-                  </button>
-                </div>
-              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-primary hover:shadow-glow text-primary font-black text-lg py-4 rounded-button transition-all disabled:opacity-50"
+              >
+                {loading ? 'Processing...' : 'Generate Secure Invoice'}
+              </button>
             </form>
           ) : (
             <div className="text-center space-y-6 py-8">
@@ -198,18 +117,50 @@ export default function UserDepositPage() {
                 <CheckCircle className="w-10 h-10 text-accent" />
               </div>
 
-              <h2 className="text-3xl font-black text-textLight">🎉 Deposit Successful!</h2>
+              <h2 className="text-3xl font-black text-textLight">🎉 Invoice Successfully Generated!</h2>
               <p className="text-textMuted font-semibold text-sm max-w-md mx-auto leading-relaxed">
-                Your deposit transaction has been successfully confirmed on-chain. Your account balance and 200% match bonus credit have been fully updated!
+                Your live crypto deposit invoice has been prepared successfully. You can pay using your personal wallet by clicking the button below.
               </p>
 
-              <div className="pt-6">
-                <Link
-                  href="/dashboard"
-                  className="bg-gradient-cta text-primary font-black text-lg px-8 py-4 rounded-button hover:shadow-glow transition-all inline-block"
+              <div className="bg-bgDark/80 p-6 rounded-card border border-secondary/15 max-w-md mx-auto text-left space-y-4">
+                <div className="flex justify-between items-center text-xs text-textMuted">
+                  <span>Invoice Token</span>
+                  <span className="text-textLight font-bold">{currentTicker}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-textMuted">
+                  <span>Deposit Value</span>
+                  <span className="text-accent font-bold">${depositAmount} USD</span>
+                </div>
+                {invoice.address && (
+                  <div className="space-y-1">
+                    <span className="text-xs text-textMuted block">Direct Wallet Address:</span>
+                    <input
+                      type="text"
+                      readOnly
+                      value={invoice.address}
+                      className="w-full bg-primary border border-secondary/20 rounded-input p-2.5 font-mono text-xs text-textLight text-center focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href={invoice.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-gradient-primary text-primary font-black text-lg px-8 py-4 rounded-button hover:shadow-glow transition-all flex items-center space-x-2"
                 >
-                  Return to Dashboard
-                </Link>
+                  <span>Pay with Cryptomus</span>
+                  <ExternalLink className="w-5 h-5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setInvoice(null)}
+                  className="bg-primary border border-secondary/25 hover:bg-secondary/15 text-textLight font-bold text-lg px-8 py-4 rounded-button transition-all"
+                >
+                  Create New Invoice
+                </button>
               </div>
             </div>
           )}

@@ -6,13 +6,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { Shield, Sparkles, Send, Coins, ArrowRight, HelpCircle, Gift } from 'lucide-react';
+import { Shield, Sparkles, Send, Coins, ArrowRight, HelpCircle, Gift, Cpu, Layers, Globe, Wifi } from 'lucide-react';
 
 export default function IcoAirdropPage() {
   const [timeLeft, setTimeLeft] = useState({ days: 90, hours: 0, minutes: 0, seconds: 0 });
   const [isClaimed, setIsClaimed] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
   const [calculatorInput, setCalculatorInput] = useState(100);
+  const [metaMaskStatus, setMetaMaskStatus] = useState<string | null>(null);
 
   // Smart Contract Details
   const contractAddress = 'TNxPaySmartContract100MCoinsTRC20';
@@ -51,6 +52,35 @@ export default function IcoAirdropPage() {
     setIsClaimed(true);
   };
 
+  const handleAddNetworkToMetaMask = async () => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      try {
+        setMetaMaskStatus('Requesting MetaMask connection...');
+        await (window as any).ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            {
+              chainId: '0x211b', // 8475 in hex representation of chain ID
+              chainName: 'NEXUS Chain Testnet',
+              nativeCurrency: {
+                name: 'NEXUSPAY Native Coin',
+                symbol: 'NXP',
+                decimals: 18,
+              },
+              rpcUrls: ['https://rpc.nexuspay.io'],
+              blockExplorerUrls: ['https://scan.nexuspay.io'],
+            },
+          ],
+        });
+        setMetaMaskStatus('🎉 NEXUS Chain Testnet successfully added to MetaMask!');
+      } catch (error: any) {
+        setMetaMaskStatus(`Notice: ${error.message || 'Authorization deferred'}`);
+      }
+    } else {
+      setMetaMaskStatus('MetaMask extension not detected. Please install MetaMask to load the RPC network config directly.');
+    }
+  };
+
   return (
     <main className="min-h-screen bg-bgDark text-textLight font-sans">
       <Header />
@@ -61,13 +91,13 @@ export default function IcoAirdropPage() {
         <div className="max-w-[1440px] mx-auto space-y-6 relative z-10">
           <span className="text-xs font-bold text-accent uppercase tracking-widest bg-accent/10 px-4 py-1.5 rounded-pill flex items-center justify-center w-fit mx-auto space-x-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>NEXUSPAY OFFICIAL UTILITY TOKEN (NXP)</span>
+            <span>NEXUSPAY OFFICIAL UTILITY COIN (NXP)</span>
           </span>
           <h1 className="text-4xl md:text-6xl font-black text-textLight max-w-4xl mx-auto leading-tight">
-            NXP Token Pre-Sale & Launch Pool
+            NXP Token Pre-Sale & EVM Network Launch
           </h1>
           <p className="text-textMuted text-lg md:text-xl font-semibold max-w-2xl mx-auto leading-relaxed">
-            The heart of NEXUSPAY ecosystem. Get 50 NXP tokens free in our exclusive pre-launch airdrop. Listing starts in 3 months!
+            The heart of NEXUSPAY ecosystem. Get 50 NXP coins free in our exclusive airdrop. Connect directly to the dedicated NEXUS Layer-1 blockchain!
           </p>
 
           {/* Countdown Clock */}
@@ -98,9 +128,9 @@ export default function IcoAirdropPage() {
         <div className="bg-primary/20 border border-secondary/10 rounded-card p-8 shadow-card flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <span className="text-xs font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-3 py-1 rounded-pill">FREE AIRDROP</span>
-            <h3 className="text-3xl font-black text-textLight">Claim Your 50 NXP Tokens</h3>
+            <h3 className="text-3xl font-black text-textLight">Claim Your 50 NXP Coins</h3>
             <p className="text-sm text-textMuted leading-relaxed">
-              To celebrate the upcoming NexusPay exchange launch pool, all newly registered users can instantly claim 50 NXP tokens directly to their portfolios completely free of charge.
+              To celebrate the upcoming NexusPay exchange launch pool, all newly registered users can instantly claim 50 NXP coins directly to their portfolios completely free of charge.
             </p>
 
             <div className="bg-bgDark/60 rounded-input p-5 border border-secondary/10 space-y-3">
@@ -114,7 +144,7 @@ export default function IcoAirdropPage() {
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-textMuted font-semibold">Contract Standard:</span>
-                <span className="text-accent font-bold font-mono">TRC-20 (TRON Network)</span>
+                <span className="text-accent font-bold font-mono">TRC-20 (TRON Network) & EVM Native</span>
               </div>
             </div>
           </div>
@@ -173,6 +203,81 @@ export default function IcoAirdropPage() {
             >
               Buy Pre-Sale NXP Now
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* EVM BLOCKCHAIN NETWORK INTEGRATION SECTION */}
+      <section className="py-16 bg-bgDark border-t border-secondary/10 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-radial-glow opacity-5 pointer-events-none"></div>
+        <div className="max-w-[1200px] mx-auto space-y-12 relative z-10">
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <span className="text-xs font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-3 py-1.5 rounded-pill flex items-center justify-center w-fit mx-auto space-x-1.5">
+              <Cpu className="w-3.5 h-3.5" />
+              <span>NEXUS CHAIN NETWORK LAYER-1</span>
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black text-textLight">NEXUS EVM Blockchain Testnet</h2>
+            <p className="text-textMuted font-semibold text-sm max-w-2xl mx-auto">
+              NEXUSPAY is proud to announce its fully customized, Ethereum-compatible Layer-1 blockchain. Add the custom network directly to MetaMask to participate in validators, deploy contracts, and trade with ultra-low gas fees paid in NXP coin!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* RPC Details Card */}
+            <div className="bg-primary/20 border border-secondary/15 rounded-card p-6 space-y-4 col-span-2">
+              <h4 className="text-lg font-bold text-textLight flex items-center space-x-2">
+                <Globe className="w-5 h-5 text-accent" />
+                <span>Network Integration Specifications</span>
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="bg-bgDark/55 p-4 rounded-input border border-secondary/5">
+                  <span className="text-xs text-textMuted font-bold block uppercase mb-1">Network Name</span>
+                  <span className="font-mono text-sm text-accent font-bold">NEXUS Chain Testnet</span>
+                </div>
+                <div className="bg-bgDark/55 p-4 rounded-input border border-secondary/5">
+                  <span className="text-xs text-textMuted font-bold block uppercase mb-1">New RPC URL</span>
+                  <span className="font-mono text-sm text-textLight font-semibold">https://rpc.nexuspay.io</span>
+                </div>
+                <div className="bg-bgDark/55 p-4 rounded-input border border-secondary/5">
+                  <span className="text-xs text-textMuted font-bold block uppercase mb-1">Chain ID</span>
+                  <span className="font-mono text-sm text-textLight font-semibold">8475 (Hex: 0x211b)</span>
+                </div>
+                <div className="bg-bgDark/55 p-4 rounded-input border border-secondary/5">
+                  <span className="text-xs text-textMuted font-bold block uppercase mb-1">Currency Symbol</span>
+                  <span className="font-mono text-sm text-accent font-bold">NXP</span>
+                </div>
+                <div className="bg-bgDark/55 p-4 rounded-input border border-secondary/5 md:col-span-2">
+                  <span className="text-xs text-textMuted font-bold block uppercase mb-1">Block Explorer URL</span>
+                  <span className="font-mono text-sm text-textLight font-semibold">https://scan.nexuspay.io</span>
+                </div>
+              </div>
+            </div>
+
+            {/* MetaMask Action Card */}
+            <div className="bg-gradient-dark border border-secondary/25 rounded-card p-6 flex flex-col justify-between space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Wifi className="w-5 h-5 text-accent" />
+                  <h4 className="text-lg font-black text-textLight">Web3 Connection</h4>
+                </div>
+                <p className="text-xs text-textMuted leading-relaxed">
+                  Integrate your browser crypto wallet instantly. NEXUS Chain fully supports MetaMask, Trust Wallet, and Ledger.
+                </p>
+                {metaMaskStatus && (
+                  <div className="bg-accent/10 border border-accent/20 p-3.5 rounded-input text-xs font-bold text-accent">
+                    {metaMaskStatus}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleAddNetworkToMetaMask}
+                className="w-full bg-accent hover:bg-accent/90 text-primary font-black text-sm py-3.5 rounded-button transition-all shadow-glow flex items-center justify-center space-x-2"
+              >
+                <span>Add Network to MetaMask</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </section>

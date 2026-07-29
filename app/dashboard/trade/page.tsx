@@ -15,8 +15,19 @@ import {
   ArrowDownLeft,
   Briefcase,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
+import {
+  getIsDemo,
+  getLiveBalance,
+  setLiveBalance,
+  getDemoBalance,
+  setDemoBalance,
+  getPortfolioAssets,
+  setPortfolioAssets,
+  addLedgerEntry,
+} from '../../lib/stateManager';
 
 interface OrderBookEntry {
   price: number;
@@ -25,6 +36,11 @@ interface OrderBookEntry {
 }
 
 export default function TradingTerminalPage() {
+  const [mounted, setMounted] = useState(false);
+  const [isDemo, setIsDemo] = useState(true);
+  const [balance, setBalance] = useState(10000);
+  const [portfolio, setPortfolio] = useState({ TRX: 1000, BTC: 0.05, ETH: 0.5 });
+
   const [selectedAsset, setSelectedAsset] = useState('TRX/USDT');
   const [orderType, setOrderType] = useState<'BUY' | 'SELL'>('BUY');
   const [executionType, setExecutionType] = useState<'MARKET' | 'LIMIT'>('MARKET');
@@ -34,8 +50,18 @@ export default function TradingTerminalPage() {
   const [recentTrades, setRecentTrades] = useState<Array<{ id: number; time: string; type: 'BUY' | 'SELL'; price: number; amount: number }>>([]);
   const [orderBook, setOrderBook] = useState<{ asks: OrderBookEntry[]; bids: OrderBookEntry[] }>({ asks: [], bids: [] });
   const [orderSuccessMessage, setOrderSuccessMessage] = useState<string | null>(null);
+  const [orderErrorMessage, setOrderErrorMessage] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Load and synchronize state on mount
+  useEffect(() => {
+    setMounted(true);
+    const demo = getIsDemo();
+    setIsDemo(demo);
+    setBalance(demo ? getDemoBalance() : getLiveBalance());
+    setPortfolio(getPortfolioAssets());
+  }, []);
 
   // Initialize and load TradingView Widget
   useEffect(() => {
@@ -92,7 +118,6 @@ export default function TradingTerminalPage() {
         });
       }
 
-      // Sort asks descending for order book view (top are more expensive)
       setOrderBook({ asks: asks.reverse(), bids });
     };
 
@@ -128,19 +153,122 @@ export default function TradingTerminalPage() {
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orderAmount || Number(orderAmount) <= 0) return;
+    setOrderErrorMessage(null);
+    setOrderSuccessMessage(null);
 
-    setOrderSuccessMessage(
-      `🎉 Successful! Simulated ${executionType} ${orderType} order for ${orderAmount} ${
-        selectedAsset.split('/')[0]
-      } has been submitted with ${leverage}x leverage.`
-    );
+    const assetToken = selectedAsset.split('/')[0] as 'TRX' | 'BTC' | 'ETH';
+    const amountNum = parseFloat(orderAmount);
+    const priceNum = parseFloat(orderPrice);
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setOrderErrorMessage('❌ Please enter a valid order amount greater than 0.');
+      return;
+    }
+    if (executionType === 'LIMIT' && (isNaN(priceNum) || priceNum <= 0)) {
+      setOrderErrorMessage('❌ Please enter a valid limit price greater than 0.');
+      return;
+    }
+
+    const currentPrice = executionType === 'MARKET'
+      ? (selectedAsset === 'TRX/USDT' ? 0.1425 : selectedAsset === 'BTC/USDT' ? 62450 : 3420)
+      : priceNum;
+
+    // Total USD cost of this margin position
+    const totalCostUSD = (amountNum * currentPrice) / leverage;
+
+    if (orderType === 'BUY') {
+      if (totalCostUSD > balance) {
+        setOrderErrorMessage(`❌ Insufficient funds. Required margin: $${totalCostUSD.toFixed(2)} USD, available balance: $${balance.toFixed(2)} USD.`);
+        return;
+      }
+
+      // Deduct margin
+      const nextBalance = balance - totalCostUSD;
+      setBalance(nextBalance);
+      if (isDemo) {
+        setDemoBalance(nextBalance);
+      } else {
+        setLiveBalance(nextBalance);
+      }
+
+      // Add to portfolio holdings
+      const nextPortfolio = {
+        ...portfolio,
+        [assetToken]: portfolio[assetToken] + amountNum
+      };
+      setPortfolio(nextPortfolio);
+      setPortfolioAssets(nextPortfolio);
+
+      // Record in persistent history ledger
+      addLedgerEntry({
+        type: 'TRADE',
+        amountUSD: totalCostUSD,
+        amountTRX: selectedAsset === 'TRX/USDT' ? amountNum : (totalCostUSD / 0.1425),
+        status: 'Completed'
+      });
+
+      setOrderSuccessMessage(
+        `🎉 Order Successful! Executed BUY order for ${amountNum.toLocaleString()} ${assetToken} at $${currentPrice.toLocaleString()} with ${leverage}x leverage. Used margin: $${totalCostUSD.toFixed(2)} USD.`
+      );
+    } else {
+      // SELL order
+      const assetHolding = portfolio[assetToken];
+      if (amountNum > assetHolding) {
+        setOrderErrorMessage(`❌ Insufficient portfolio holdings. You only possess ${assetHolding.toLocaleString()} ${assetToken} to sell.`);
+        return;
+      }
+
+      // Add gained USD to balance
+      const gainedUSD = (amountNum * currentPrice) / leverage;
+      const nextBalance = balance + gainedUSD;
+      setBalance(nextBalance);
+      if (isDemo) {
+        setDemoBalance(nextBalance);
+      } else {
+        setLiveBalance(nextBalance);
+      }
+
+      // Subtract holdings
+      const nextPortfolio = {
+        ...portfolio,
+        [assetToken]: portfolio[assetToken] - amountNum
+      };
+      setPortfolio(nextPortfolio);
+      setPortfolioAssets(nextPortfolio);
+
+      // Record in persistent history ledger
+      addLedgerEntry({
+        type: 'TRADE',
+        amountUSD: gainedUSD,
+        amountTRX: selectedAsset === 'TRX/USDT' ? amountNum : (gainedUSD / 0.1425),
+        status: 'Completed'
+      });
+
+      setOrderSuccessMessage(
+        `🎉 Order Successful! Executed SELL order for ${amountNum.toLocaleString()} ${assetToken} at $${currentPrice.toLocaleString()} with ${leverage}x leverage. Released margin: $${gainedUSD.toFixed(2)} USD.`
+      );
+    }
 
     setOrderAmount('');
-    setTimeout(() => {
-      setOrderSuccessMessage(null);
-    }, 5000);
   };
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-bgDark text-textLight">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="w-8 h-8 text-secondary animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  // Calculate total portfolio asset value in USD
+  const trxVal = portfolio.TRX * 0.1425;
+  const btcVal = portfolio.BTC * 62450;
+  const ethVal = portfolio.ETH * 3420;
+  const totalHoldingsValue = trxVal + btcVal + ethVal;
 
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
@@ -167,6 +295,10 @@ export default function TradingTerminalPage() {
                 <option value="ETH/USDT">ETH/USDT (Ethereum)</option>
               </select>
             </div>
+
+            <span className={`px-2.5 py-1 text-[10px] font-black rounded-pill uppercase tracking-wider ${isDemo ? 'bg-accent/15 text-accent' : 'bg-secondary/15 text-secondary'}`}>
+              {isDemo ? 'DEMO / SANDBOX MODE' : 'LIVE ACCOUNT'}
+            </span>
           </div>
 
           <div className="flex items-center space-x-6 font-mono text-xs">
@@ -192,7 +324,7 @@ export default function TradingTerminalPage() {
 
       {/* Trading Dashboard Grid */}
       <section className="py-8 px-6 max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Hand: Live Chart Terminal (7 Columns) */}
+        {/* Left Hand: Live Chart Terminal (8 Columns) */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-primary/25 border border-secondary/10 rounded-card p-4 h-[600px] flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -211,15 +343,46 @@ export default function TradingTerminalPage() {
           <div className="bg-primary/20 border border-secondary/10 rounded-card p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-bgDark/45 p-4 rounded-input border border-secondary/5">
               <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Available Margin</span>
-              <span className="text-xl font-mono font-black text-textLight">$12,847.50</span>
+              <span className="text-xl font-mono font-black text-textLight">${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="bg-bgDark/45 p-4 rounded-input border border-secondary/5">
-              <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Total Position Value</span>
-              <span className="text-xl font-mono font-black text-accent">$0.00</span>
+              <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Total Holdings Value</span>
+              <span className="text-xl font-mono font-black text-accent">${totalHoldingsValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="bg-bgDark/45 p-4 rounded-input border border-secondary/5">
               <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Leverage Buffer Mode</span>
               <span className="text-xl font-mono font-black text-secondary">Cross Margin</span>
+            </div>
+          </div>
+
+          {/* Wallet holdings breakdown */}
+          <div className="bg-primary/20 border border-secondary/10 rounded-card p-6">
+            <h3 className="font-bold text-textLight text-sm uppercase tracking-wider border-b border-secondary/10 pb-3 mb-4 flex items-center space-x-2">
+              <Briefcase className="w-4 h-4 text-accent" />
+              <span>Wallet Holdings Portfolio</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-bgDark/60 p-4 rounded-input border border-secondary/5">
+                <div className="flex justify-between text-xs text-textMuted font-bold mb-1">
+                  <span>TRX Balance</span>
+                  <span className="text-textLight">{portfolio.TRX.toLocaleString()} TRX</span>
+                </div>
+                <div className="text-right text-xs font-mono font-bold text-accent">${trxVal.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD</div>
+              </div>
+              <div className="bg-bgDark/60 p-4 rounded-input border border-secondary/5">
+                <div className="flex justify-between text-xs text-textMuted font-bold mb-1">
+                  <span>BTC Balance</span>
+                  <span className="text-textLight">{portfolio.BTC.toFixed(4)} BTC</span>
+                </div>
+                <div className="text-right text-xs font-mono font-bold text-accent">${btcVal.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD</div>
+              </div>
+              <div className="bg-bgDark/60 p-4 rounded-input border border-secondary/5">
+                <div className="flex justify-between text-xs text-textMuted font-bold mb-1">
+                  <span>ETH Balance</span>
+                  <span className="text-textLight">{portfolio.ETH.toFixed(2)} ETH</span>
+                </div>
+                <div className="text-right text-xs font-mono font-bold text-accent">${ethVal.toLocaleString(undefined, { maximumFractionDigits: 2 })} USD</div>
+              </div>
             </div>
           </div>
         </div>
@@ -291,6 +454,7 @@ export default function TradingTerminalPage() {
                 <input
                   type="number"
                   placeholder="0.00"
+                  step="0.0001"
                   value={orderAmount}
                   onChange={(e) => setOrderAmount(e.target.value)}
                   className="w-full bg-primary border border-secondary/20 rounded-input p-3 font-mono text-xs text-textLight focus:outline-none focus:border-accent"
@@ -324,6 +488,13 @@ export default function TradingTerminalPage() {
                 <div className="bg-accent/15 border border-accent/30 p-3 rounded-input text-xs font-semibold text-accent flex items-start space-x-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{orderSuccessMessage}</span>
+                </div>
+              )}
+
+              {orderErrorMessage && (
+                <div className="bg-danger/15 border border-danger/30 p-3 rounded-input text-xs font-semibold text-danger flex items-start space-x-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{orderErrorMessage}</span>
                 </div>
               )}
 

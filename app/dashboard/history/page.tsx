@@ -2,59 +2,23 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { Search, Calendar, FileDown } from 'lucide-react';
-
-interface MockTx {
-  date: string;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'BONUS' | 'TRADE';
-  amountUSD: number;
-  amountTRX: number;
-  status: 'Completed' | 'Pending' | 'Failed';
-  txId: string;
-}
-
-const INITIAL_TXS: MockTx[] = [
-  {
-    date: '2026-07-28 11:24',
-    type: 'DEPOSIT',
-    amountUSD: 50.0,
-    amountTRX: 266.8,
-    status: 'Completed',
-    txId: '98fa7812bc8971f287116719a897262ffb0123cb2fa3972a91298cde726b2aa8',
-  },
-  {
-    date: '2026-07-28 11:25',
-    type: 'BONUS',
-    amountUSD: 500.0,
-    amountTRX: 2668.0,
-    status: 'Completed',
-    txId: 'e8fa7812bc8971f287116719a897262ffb0123cb2fa3972a91298cde726b2ee9',
-  },
-  {
-    date: '2026-07-20 14:12',
-    type: 'WITHDRAWAL',
-    amountUSD: 150.0,
-    amountTRX: 800.4,
-    status: 'Completed',
-    txId: '42fa7812bc8971f287116719a897262ffb0123cb2fa3972a91298cde726b29f0',
-  },
-  {
-    date: '2026-07-15 09:30',
-    type: 'TRADE',
-    amountUSD: 2340.0,
-    amountTRX: 12486.6,
-    status: 'Completed',
-    txId: 'c2fa7812bc8971f287116719a897262ffb0123cb2fa3972a91298cde726b25aa',
-  },
-];
+import { Search, Calendar, FileDown, RefreshCw } from 'lucide-react';
+import { getLedger, LedgerEntry } from '../../lib/stateManager';
 
 export default function TransactionHistoryPage() {
-  const [txs, setTxs] = useState<MockTx[]>(INITIAL_TXS);
+  const [mounted, setMounted] = useState(false);
+  const [txs, setTxs] = useState<LedgerEntry[]>([]);
   const [filterType, setFilterType] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Synchronize with state manager on mount
+  useEffect(() => {
+    setMounted(true);
+    setTxs(getLedger());
+  }, []);
 
   const filteredTxs = txs.filter((tx) => {
     const matchesType = filterType === 'ALL' || tx.type === filterType;
@@ -76,6 +40,18 @@ export default function TransactionHistoryPage() {
     a.setAttribute('download', `nexuspay-ledger-${new Date().toISOString().slice(0, 10)}.csv`);
     a.click();
   };
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-bgDark text-textLight">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="w-8 h-8 text-secondary animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
@@ -161,9 +137,9 @@ export default function TransactionHistoryPage() {
                       </span>
                     </td>
                     <td className="p-5 font-mono">
-                      {tx.type === 'WITHDRAWAL' ? '-' : '+'}${tx.amountUSD.toLocaleString()}
+                      {tx.type === 'WITHDRAWAL' ? '-' : '+'}${tx.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="p-5 font-mono">{tx.amountTRX.toLocaleString()} TRX</td>
+                    <td className="p-5 font-mono">{tx.amountTRX.toLocaleString(undefined, { maximumFractionDigits: 4 })} TRX</td>
                     <td className="p-5">
                       <span className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded-pill">
                         {tx.status}

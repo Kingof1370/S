@@ -7,21 +7,51 @@ import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { ArrowUpRight, ArrowDownLeft, Shield, Award, LineChart, PlayCircle, RefreshCw, Cpu, TrendingUp } from 'lucide-react';
+import {
+  getIsDemo,
+  setIsDemo,
+  getLiveBalance,
+  setLiveBalance,
+  getDemoBalance,
+  setDemoBalance as setDemoBalanceState,
+  getVestedBonus,
+  getCumulativeProfit,
+} from '../lib/stateManager';
 
 export default function UserDashboardOverview() {
+  const [mounted, setMounted] = useState(false);
   const [demoBalance, setDemoBalance] = useState(10000);
-  const [isDemo, setIsDemo] = useState(true);
+  const [liveBalance, setLiveBalanceState] = useState(8200);
+  const [vestedBonus, setVestedBonusState] = useState(4647.50);
+  const [cumulativeProfit, setCumulativeProfitState] = useState(2340.00);
+  const [isDemoMode, setIsDemoMode] = useState(true);
   const [fundingRequest, setFundingRequest] = useState(10000);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // Synchronize on mount
+  useEffect(() => {
+    setMounted(true);
+    setIsDemoMode(getIsDemo());
+    setDemoBalance(getDemoBalance());
+    setLiveBalanceState(getLiveBalance());
+    setVestedBonusState(getVestedBonus());
+    setCumulativeProfitState(getCumulativeProfit());
+  }, []);
+
+  const handleToggleMode = () => {
+    const nextMode = !isDemoMode;
+    setIsDemoMode(nextMode);
+    setIsDemo(nextMode);
+  };
+
   const handleResetDemo = () => {
     setDemoBalance(fundingRequest);
+    setDemoBalanceState(fundingRequest);
   };
 
   // Embed live TradingView TRX/USD Widget
   useEffect(() => {
     if (typeof window !== 'undefined' && containerRef.current) {
-      // Clear previous scripts/widgets if any
       containerRef.current.innerHTML = '';
 
       const script = document.createElement('script');
@@ -47,6 +77,18 @@ export default function UserDashboardOverview() {
     }
   }, []);
 
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-bgDark text-textLight">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="w-8 h-8 text-secondary animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
       <Header />
@@ -63,14 +105,14 @@ export default function UserDashboardOverview() {
 
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => setIsDemo(!isDemo)}
+              onClick={handleToggleMode}
               className={`px-4 py-2.5 rounded-button text-xs font-black uppercase tracking-wider transition-all border ${
-                isDemo
+                isDemoMode
                   ? 'bg-accent/10 border-accent text-accent hover:bg-accent/20'
                   : 'bg-secondary/15 border-secondary text-secondary hover:bg-secondary/25'
               }`}
             >
-              {isDemo ? '🟢 Mode: DEMO / SANDBOX' : '🔴 Mode: LIVE ACCOUNT'}
+              {isDemoMode ? '🟢 Mode: DEMO / SANDBOX' : '🔴 Mode: LIVE ACCOUNT'}
             </button>
 
             <Link
@@ -91,7 +133,7 @@ export default function UserDashboardOverview() {
         </div>
 
         {/* Demo Account Setup Controller */}
-        {isDemo && (
+        {isDemoMode && (
           <div className="bg-accent/10 border border-accent/20 rounded-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
               <h3 className="font-bold text-textLight flex items-center space-x-2">
@@ -115,7 +157,7 @@ export default function UserDashboardOverview() {
                   <option value={25000}>25,000</option>
                   <option value={50000}>50,000</option>
                   <option value={100000}>100,000</option>
-                  <option value={500000}>50,0000</option>
+                  <option value={500000}>500,000</option>
                 </select>
               </div>
               <button
@@ -133,23 +175,23 @@ export default function UserDashboardOverview() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
             <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">
-              {isDemo ? 'Demo Portfolio Balance' : 'Total Portfolio Balance'}
+              {isDemoMode ? 'Demo Portfolio Balance' : 'Total Portfolio Balance'}
             </span>
             <p className="text-3xl font-mono font-black text-textLight">
-              ${isDemo ? demoBalance.toLocaleString() : '12,847.50'}
+              ${isDemoMode ? demoBalance.toLocaleString() : liveBalance.toLocaleString()}
             </p>
           </div>
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
             <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Deposit Balance</span>
-            <p className="text-3xl font-mono font-black text-accent">$8,200.00</p>
+            <p className="text-3xl font-mono font-black text-accent">${liveBalance.toLocaleString()}</p>
           </div>
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
             <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Vested Bonus Balance</span>
-            <p className="text-3xl font-mono font-black text-secondary">$4,647.50</p>
+            <p className="text-3xl font-mono font-black text-secondary">${vestedBonus.toLocaleString()}</p>
           </div>
           <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card">
             <span className="text-xs text-textMuted font-bold uppercase tracking-wider block mb-1">Cumulative Net Profit</span>
-            <p className="text-3xl font-mono font-black text-accent">$2,340.00</p>
+            <p className="text-3xl font-mono font-black text-accent">${cumulativeProfit.toLocaleString()}</p>
           </div>
         </div>
 

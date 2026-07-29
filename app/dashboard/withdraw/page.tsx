@@ -2,14 +2,21 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { isValidTronAddress } from '../../services/tronService';
-import { ArrowUpRight, CheckCircle, Info, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, CheckCircle, Info, ShieldCheck, RefreshCw } from 'lucide-react';
+import {
+  getLiveBalance,
+  setLiveBalance,
+  getVestedBonus,
+  addLedgerEntry
+} from '../../lib/stateManager';
 import Link from 'next/link';
 
 export default function UserWithdrawPage() {
+  const [mounted, setMounted] = useState(false);
   const [address, setAddress] = useState('');
   const [amountUSD, setAmountUSD] = useState(10);
   const [twoFactor, setTwoFactor] = useState('');
@@ -17,7 +24,16 @@ export default function UserWithdrawPage() {
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const availableBalance = 8200.00; // deposit balance is withdrawable (bonus is locked/vested)
+  const [availableBalance, setAvailableBalance] = useState(8200.00);
+  const [vestedBonus, setVestedBonus] = useState(4647.50);
+
+  // Load and synchronize values on mount
+  useEffect(() => {
+    setMounted(true);
+    setAvailableBalance(getLiveBalance());
+    setVestedBonus(getVestedBonus());
+  }, []);
+
   const trxRate = 0.1874;
   const trxEquivalent = parseFloat((amountUSD / trxRate).toFixed(4));
 
@@ -36,7 +52,7 @@ export default function UserWithdrawPage() {
     }
 
     if (amountUSD > availableBalance) {
-      setError(`Insufficient funds. Your withdrawable deposit balance is $${availableBalance.toLocaleString()}.`);
+      setError(`Insufficient funds. Your withdrawable deposit balance is $${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}.`);
       return;
     }
 
@@ -50,13 +66,37 @@ export default function UserWithdrawPage() {
       return;
     }
 
-    // Process withdrawal
+    // Process withdrawal and persist
     setSubmitting(true);
     setTimeout(() => {
+      const nextBalance = availableBalance - amountUSD;
+      setAvailableBalance(nextBalance);
+      setLiveBalance(nextBalance);
+
+      // Record withdrawal transaction in ledger
+      addLedgerEntry({
+        type: 'WITHDRAWAL',
+        amountUSD: amountUSD,
+        amountTRX: trxEquivalent,
+        status: 'Completed'
+      });
+
       setSubmitting(false);
       setSuccess(true);
     }, 1500);
   };
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-bgDark text-textLight">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="w-8 h-8 text-secondary animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
@@ -83,11 +123,11 @@ export default function UserWithdrawPage() {
               <div className="grid grid-cols-2 gap-4 bg-bgDark/60 p-4 rounded-card border border-secondary/10 text-xs font-semibold">
                 <div>
                   <span className="text-textMuted block uppercase">Withdrawable Balance</span>
-                  <span className="text-base text-accent font-mono font-black">${availableBalance.toLocaleString()}</span>
+                  <span className="text-base text-accent font-mono font-black">${availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div>
                   <span className="text-textMuted block uppercase">Vested Bonus Balance</span>
-                  <span className="text-base text-secondary font-mono font-black">$4,647.50</span>
+                  <span className="text-base text-secondary font-mono font-black">${vestedBonus.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
 
@@ -165,7 +205,7 @@ export default function UserWithdrawPage() {
               <div className="pt-6">
                 <Link
                   href="/dashboard"
-                  className="bg-gradient-cta text-primary font-black text-lg px-8 py-4 rounded-button hover:shadow-glow transition-all inline-block"
+                  className="bg-gradient-primary text-primary font-black text-lg px-8 py-4 rounded-button hover:shadow-glow transition-all inline-block"
                 >
                   Return to Dashboard
                 </Link>

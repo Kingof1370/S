@@ -2,19 +2,33 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useLivePrices } from '../../hooks/useLivePrices';
 import { createCryptomusInvoice } from '../../services/cryptomusService';
-import { CheckCircle, Coins, ArrowRight, ExternalLink } from 'lucide-react';
+import { CheckCircle, Coins, ArrowRight, ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
+import {
+  getLiveBalance,
+  setLiveBalance,
+  getVestedBonus,
+  setVestedBonus,
+  addLedgerEntry
+} from '../../lib/stateManager';
 import Link from 'next/link';
 
 export default function UserDepositPage() {
+  const [mounted, setMounted] = useState(false);
   const [depositAmount, setDepositAmount] = useState(50);
   const [selectedCoin, setSelectedCoin] = useState('TRX/USD');
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+
+  // Load state on mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch all 50 live cryptocurrencies dynamically to allow depositing with ANY of them!
   const livePrices = useLivePrices();
@@ -41,13 +55,101 @@ export default function UserDepositPage() {
     }
   };
 
+  const handleSimulatePayment = () => {
+    // 1. Update Live balance
+    const currentBalance = getLiveBalance();
+    const nextBalance = currentBalance + depositAmount;
+    setLiveBalance(nextBalance);
+
+    // 2. Add DEPOSIT ledger entry
+    addLedgerEntry({
+      type: 'DEPOSIT',
+      amountUSD: depositAmount,
+      amountTRX: depositAmount / 0.1425,
+      status: 'Completed'
+    });
+
+    // 3. Apply 200% match welcome bonus on first-time deposits
+    const currentVestedBonus = getVestedBonus();
+    const welcomeBonusAmt = depositAmount * 2.0; // 200% multiplier
+    const nextVestedBonus = currentVestedBonus + welcomeBonusAmt;
+    setVestedBonus(nextVestedBonus);
+
+    // Add BONUS ledger entry
+    addLedgerEntry({
+      type: 'BONUS',
+      amountUSD: welcomeBonusAmt,
+      amountTRX: welcomeBonusAmt / 0.1425,
+      status: 'Completed'
+    });
+
+    setPaymentConfirmed(true);
+  };
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-bgDark text-textLight">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="w-8 h-8 text-secondary animate-spin" />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
       <Header />
 
       <section className="py-20 px-6 max-w-[800px] mx-auto">
         <div className="bg-primary/20 border border-secondary/10 rounded-card p-8 shadow-card">
-          {!invoice ? (
+          {paymentConfirmed ? (
+            <div className="text-center space-y-6 py-8">
+              <div className="w-16 h-16 rounded-full bg-accent/20 border border-accent flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-10 h-10 text-accent animate-pulse" />
+              </div>
+
+              <h2 className="text-3xl font-black text-textLight">🎉 Deposit Payment Confirmed!</h2>
+              <p className="text-textMuted font-semibold text-sm max-w-md mx-auto leading-relaxed">
+                Your payment of <span className="text-textLight font-bold">${depositAmount.toLocaleString()} USD</span> has been securely cleared on-chain.
+              </p>
+
+              <div className="bg-bgDark/80 p-6 rounded-card border border-secondary/15 max-w-md mx-auto text-left space-y-4">
+                <div className="flex justify-between items-center text-xs text-textMuted">
+                  <span>Credited Deposit Balance</span>
+                  <span className="text-accent font-bold">+${depositAmount.toLocaleString()} USD</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-textMuted">
+                  <span>Welcome Bonus (200% match)</span>
+                  <span className="text-secondary font-bold">+${(depositAmount * 2).toLocaleString()} USD</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-textMuted">
+                  <span>Network Processing Time</span>
+                  <span className="text-textLight font-mono">Instant Confirmation</span>
+                </div>
+              </div>
+
+              <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/dashboard"
+                  className="bg-gradient-primary text-primary font-black text-lg px-8 py-4 rounded-button hover:shadow-glow transition-all"
+                >
+                  Go to Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvoice(null);
+                    setPaymentConfirmed(false);
+                  }}
+                  className="bg-primary border border-secondary/25 hover:bg-secondary/15 text-textLight font-bold text-lg px-8 py-4 rounded-button transition-all"
+                >
+                  Deposit More
+                </button>
+              </div>
+            </div>
+          ) : !invoice ? (
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="border-b border-secondary/10 pb-4">
                 <h1 className="text-2xl md:text-3xl font-black text-textLight">Live Global Crypto Deposit</h1>
@@ -142,6 +244,17 @@ export default function UserDepositPage() {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="bg-accent/10 border border-accent/20 rounded-input p-4 max-w-md mx-auto space-y-2">
+                <span className="text-xs font-bold text-accent block">TESTNET SIMULATION OPTIONS</span>
+                <button
+                  type="button"
+                  onClick={handleSimulatePayment}
+                  className="w-full bg-accent text-primary font-black text-sm py-2.5 rounded hover:shadow-glow transition-all"
+                >
+                  Simulate Direct Successful Payment
+                </button>
               </div>
 
               <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">

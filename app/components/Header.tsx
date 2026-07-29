@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, ArrowUpRight, HelpCircle, Shield, FileText } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,6 +42,10 @@ export default function Header() {
           <Link href="/prop" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
             Prop Trading
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
+          </Link>
+          <Link href="/ico" className="text-sm font-semibold text-accent hover:text-accent/90 transition-colors relative group py-2 flex items-center space-x-1">
+            <span>Launch Pool (NXP)</span>
+            <span className="bg-accent/20 text-accent text-[9px] font-bold px-1.5 py-0.5 rounded-pill uppercase">PRE-SALE</span>
           </Link>
           <Link href="/#calculator" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
             200% Bonus
@@ -91,6 +95,13 @@ export default function Header() {
             className="text-lg font-bold text-textLight/90 hover:text-secondary"
           >
             Prop Trading
+          </Link>
+          <Link
+            href="/ico"
+            onClick={() => setIsOpen(false)}
+            className="text-lg font-bold text-accent hover:text-accent/90"
+          >
+            Launch Pool (NXP)
           </Link>
           <Link
             href="/#calculator"

@@ -39,6 +39,10 @@ export default function Header() {
             Home
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
           </Link>
+          <Link href="/dashboard/trade" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
+            Trade
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
+          </Link>
           <Link href="/prop" className="text-sm font-semibold text-textLight/80 hover:text-secondary transition-colors relative group py-2">
             Prop Trading
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all group-hover:w-full"></span>
@@ -88,6 +92,13 @@ export default function Header() {
             className="text-lg font-bold text-textLight/90 hover:text-secondary"
           >
             Home
+          </Link>
+          <Link
+            href="/dashboard/trade"
+            onClick={() => setIsOpen(false)}
+            className="text-lg font-bold text-textLight/90 hover:text-secondary"
+          >
+            Trade
           </Link>
           <Link
             href="/prop"

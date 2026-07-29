@@ -2,20 +2,50 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { ArrowUpRight, ArrowDownLeft, Shield, Award, LineChart, PlayCircle, RefreshCw } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Shield, Award, LineChart, PlayCircle, RefreshCw, Cpu, TrendingUp } from 'lucide-react';
 
 export default function UserDashboardOverview() {
   const [demoBalance, setDemoBalance] = useState(10000);
   const [isDemo, setIsDemo] = useState(true);
   const [fundingRequest, setFundingRequest] = useState(10000);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleResetDemo = () => {
     setDemoBalance(fundingRequest);
   };
+
+  // Embed live TradingView TRX/USD Widget
+  useEffect(() => {
+    if (typeof window !== 'undefined' && containerRef.current) {
+      // Clear previous scripts/widgets if any
+      containerRef.current.innerHTML = '';
+
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+      script.type = 'text/javascript';
+      script.async = true;
+      script.innerHTML = JSON.stringify({
+        autosize: true,
+        symbol: 'BINANCE:TRXUSDT',
+        interval: 'D',
+        timezone: 'Etc/UTC',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: true,
+        calendar: false,
+        studies: ['RSI@tv-basicstudies', 'MASimple@tv-basicstudies'],
+        support_host: 'https://www.tradingview.com'
+      });
+      containerRef.current.appendChild(script);
+    }
+  }, []);
 
   return (
     <main className="min-h-screen bg-bgDark text-textLight">
@@ -85,7 +115,7 @@ export default function UserDashboardOverview() {
                   <option value={25000}>25,000</option>
                   <option value={50000}>50,000</option>
                   <option value={100000}>100,000</option>
-                  <option value={500000}>500,000</option>
+                  <option value={500000}>50,0000</option>
                 </select>
               </div>
               <button
@@ -124,7 +154,20 @@ export default function UserDashboardOverview() {
         </div>
 
         {/* Quick actions row links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Link
+            href="/dashboard/trade"
+            className="bg-bgDark border border-accent/40 p-6 rounded-card flex items-center space-x-4 hover:scale-[1.02] transition-all shadow-card"
+          >
+            <div className="p-3 bg-accent/10 border border-accent/20 rounded-input">
+              <TrendingUp className="w-6 h-6 text-accent animate-pulse" />
+            </div>
+            <div>
+              <h3 className="font-bold text-textLight">Live Trading Desk</h3>
+              <p className="text-xs text-textMuted mt-0.5">Open trade setups, market orders & limit order book.</p>
+            </div>
+          </Link>
+
           <Link
             href="/prop/dashboard"
             className="bg-bgDark border border-secondary/15 hover:border-accent/40 p-6 rounded-card flex items-center space-x-4 hover:scale-[1.02] transition-all shadow-card"
@@ -133,7 +176,7 @@ export default function UserDashboardOverview() {
               <Award className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h3 className="font-bold text-textLight">Prop Trading Challenge</h3>
+              <h3 className="font-bold text-textLight">Prop Trading</h3>
               <p className="text-xs text-textMuted mt-0.5">Evaluate and trade up to $500,000 risk capital.</p>
             </div>
           </Link>
@@ -156,9 +199,29 @@ export default function UserDashboardOverview() {
               <Shield className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h3 className="font-bold text-textLight">Security Verification</h3>
-              <p className="text-xs text-textMuted mt-0.5">Google 2FA is currently active and fully operational.</p>
+              <h3 className="font-bold text-textLight">Google 2FA Active</h3>
+              <p className="text-xs text-textMuted mt-0.5">FCA protection is currently active and fully operational.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Embed Live interactive charts */}
+        <div className="bg-primary/25 border border-secondary/10 p-6 rounded-card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-textLight flex items-center space-x-2">
+              <LineChart className="w-5 h-5 text-accent" />
+              <span>TRX/USD Real-Time Technical Analysis Chart</span>
+            </h2>
+            <Link
+              href="/dashboard/trade"
+              className="text-xs font-bold text-accent hover:underline flex items-center space-x-1"
+            >
+              <span>Go to Full Trading Terminal</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+          <div className="w-full h-[500px] rounded-input overflow-hidden border border-secondary/15 bg-bgDark">
+            <div ref={containerRef} className="tradingview-widget-container w-full h-full" style={{ height: '100%' }}></div>
           </div>
         </div>
       </section>
